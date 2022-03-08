@@ -344,8 +344,6 @@ class Client:
 
         .. versionadded:: 1.6
         """
-        if self.ws:
-            return self.ws.is_ratelimited()
         return False
 
     @property
@@ -538,7 +536,7 @@ class Client:
         if you wish to have more control over the synchronization of multiple
         IDENTIFYing clients.
 
-        The default implementation sleeps for 5 seconds.
+        The default implementation does nothing.
 
         .. versionadded:: 1.4
 
@@ -550,8 +548,7 @@ class Client:
             Whether this IDENTIFY is the first initial IDENTIFY.
         """
 
-        if not initial:
-            await asyncio.sleep(5.0)
+        pass
 
     async def _async_setup_hook(self) -> None:
         # Called whenever the client needs to initialise asyncio objects with a running loop
