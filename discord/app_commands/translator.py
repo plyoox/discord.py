@@ -189,20 +189,18 @@ class Translator:
         """
         pass
 
-    async def _checked_translate(
+    def _checked_translate(
         self, string: locale_str, locale: Locale, context: TranslationContextTypes
     ) -> Optional[str]:
         try:
-            return await self.translate(string, locale, context)
+            return self.translate(string, locale, context)
         except TranslationError:
             raise
         except Exception as e:
             raise TranslationError(string=string, locale=locale, context=context) from e
 
-    async def translate(self, string: locale_str, locale: Locale, context: TranslationContextTypes) -> Optional[str]:
-        """|coro|
-
-        Translates the given string to the specified locale.
+    def translate(self, string: locale_str, locale: Locale, context: TranslationContextTypes) -> Optional[str]:
+        """Translates the given string to the specified locale.
 
         If the string cannot be translated, ``None`` should be returned.
 

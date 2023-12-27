@@ -90,7 +90,7 @@ class CommandParameter:
     _rename: Union[str, locale_str] = MISSING
     _annotation: Any = MISSING
 
-    async def get_translated_payload(self, translator: Translator, data: Parameter) -> Dict[str, Any]:
+    def get_translated_payload(self, translator: Translator, data: Parameter) -> Dict[str, Any]:
         base = self.to_dict()
 
         rename = self._rename
@@ -105,17 +105,17 @@ class CommandParameter:
         description_context = TranslationContext(location=TranslationContextLocation.parameter_description, data=data)
         for locale in Locale:
             if needs_name_translations:
-                translation = await translator._checked_translate(rename, locale, name_context)
+                translation = translator._checked_translate(rename, locale, name_context)
                 if translation is not None:
                     name_localizations[locale.value] = translation
 
             if needs_description_translations:
-                translation = await translator._checked_translate(description, locale, description_context)
+                translation = translator._checked_translate(description, locale, description_context)
                 if translation is not None:
                     description_localizations[locale.value] = translation
 
         if self.choices:
-            base['choices'] = [await choice.get_translated_payload(translator) for choice in self.choices]
+            base['choices'] = [choice.get_translated_payload(translator) for choice in self.choices]
 
         if name_localizations:
             base['name_localizations'] = name_localizations
