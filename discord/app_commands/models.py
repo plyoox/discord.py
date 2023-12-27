@@ -505,13 +505,13 @@ class Choice(Generic[ChoiceT]):
                 f'invalid Choice value type given, expected int, str, or float but received {self.value.__class__.__name__}'
             )
 
-    async def get_translated_payload(self, translator: Translator) -> Dict[str, Any]:
+    def get_translated_payload(self, translator: Translator) -> Dict[str, Any]:
         base = self.to_dict()
         name_localizations: Dict[str, str] = {}
         context = TranslationContext(location=TranslationContextLocation.choice_name, data=self)
         if self._locale_name:
             for locale in Locale:
-                translation = await translator._checked_translate(self._locale_name, locale, context)
+                translation = translator._checked_translate(self._locale_name, locale, context)
                 if translation is not None:
                     name_localizations[locale.value] = translation
 
@@ -520,11 +520,11 @@ class Choice(Generic[ChoiceT]):
 
         return base
 
-    async def get_translated_payload_for_locale(self, translator: Translator, locale: Locale) -> Dict[str, Any]:
+    def get_translated_payload_for_locale(self, translator: Translator, locale: Locale) -> Dict[str, Any]:
         base = self.to_dict()
         if self._locale_name:
             context = TranslationContext(location=TranslationContextLocation.choice_name, data=self)
-            translation = await translator._checked_translate(self._locale_name, locale, context)
+            translation = translator._checked_translate(self._locale_name, locale, context)
             if translation is not None:
                 base['name'] = translation
 

@@ -747,7 +747,7 @@ class Command(Generic[GroupT, P, T]):
 
         return copy
 
-    async def get_translated_payload(self, tree: CommandTree[ClientT], translator: Translator) -> Dict[str, Any]:
+    def get_translated_payload(self, tree: CommandTree[ClientT], translator: Translator) -> Dict[str, Any]:
         base = self.to_dict(tree)
         name_localizations: Dict[str, str] = {}
         description_localizations: Dict[str, str] = {}
@@ -758,19 +758,19 @@ class Command(Generic[GroupT, P, T]):
 
         for locale in Locale:
             if self._locale_name:
-                translation = await translator._checked_translate(self._locale_name, locale, name_context)
+                translation = translator._checked_translate(self._locale_name, locale, name_context)
                 if translation is not None:
                     name_localizations[locale.value] = translation
 
             if self._locale_description:
-                translation = await translator._checked_translate(self._locale_description, locale, description_context)
+                translation = translator._checked_translate(self._locale_description, locale, description_context)
                 if translation is not None:
                     description_localizations[locale.value] = translation
 
         base['name_localizations'] = name_localizations
         base['description_localizations'] = description_localizations
         base['options'] = [
-            await param.get_translated_payload(translator, Parameter(param, self)) for param in self._params.values()
+            param.get_translated_payload(translator, Parameter(param, self)) for param in self._params.values()
         ]
         return base
 
@@ -1282,13 +1282,13 @@ class ContextMenu:
         """:class:`str`: Returns the fully qualified command name."""
         return self.name
 
-    async def get_translated_payload(self, tree: CommandTree[ClientT], translator: Translator) -> Dict[str, Any]:
+    def get_translated_payload(self, tree: CommandTree[ClientT], translator: Translator) -> Dict[str, Any]:
         base = self.to_dict(tree)
         context = TranslationContext(location=TranslationContextLocation.command_name, data=self)
         if self._locale_name:
             name_localizations: Dict[str, str] = {}
             for locale in Locale:
-                translation = await translator._checked_translate(self._locale_name, locale, context)
+                translation = translator._checked_translate(self._locale_name, locale, context)
                 if translation is not None:
                     name_localizations[locale.value] = translation
 
@@ -1718,7 +1718,7 @@ class Group:
 
         return copy
 
-    async def get_translated_payload(self, tree: CommandTree[ClientT], translator: Translator) -> Dict[str, Any]:
+    def get_translated_payload(self, tree: CommandTree[ClientT], translator: Translator) -> Dict[str, Any]:
         base = self.to_dict(tree)
         name_localizations: Dict[str, str] = {}
         description_localizations: Dict[str, str] = {}
@@ -1728,18 +1728,18 @@ class Group:
         description_context = TranslationContext(location=TranslationContextLocation.group_description, data=self)
         for locale in Locale:
             if self._locale_name:
-                translation = await translator._checked_translate(self._locale_name, locale, name_context)
+                translation = translator._checked_translate(self._locale_name, locale, name_context)
                 if translation is not None:
                     name_localizations[locale.value] = translation
 
             if self._locale_description:
-                translation = await translator._checked_translate(self._locale_description, locale, description_context)
+                translation = translator._checked_translate(self._locale_description, locale, description_context)
                 if translation is not None:
                     description_localizations[locale.value] = translation
 
         base['name_localizations'] = name_localizations
         base['description_localizations'] = description_localizations
-        base['options'] = [await child.get_translated_payload(tree, translator) for child in self._children.values()]
+        base['options'] = [child.get_translated_payload(tree, translator) for child in self._children.values()]
         return base
 
     def to_dict(self, tree: CommandTree[ClientT]) -> Dict[str, Any]:

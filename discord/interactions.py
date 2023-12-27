@@ -611,12 +611,10 @@ class Interaction(Generic[ClientT]):
             proxy_auth=http.proxy_auth,
         )
 
-    async def translate(
+    def translate(
         self, string: Union[str, locale_str], *, locale: Locale = MISSING, data: Any = MISSING
     ) -> Optional[str]:
-        """|coro|
-
-        Translates a string using the set :class:`~discord.app_commands.Translator`.
+        """Translates a string using the set :class:`~discord.app_commands.Translator`.
 
         .. versionadded:: 2.1
 
@@ -652,7 +650,7 @@ class Interaction(Generic[ClientT]):
             data = self.command or self.message
 
         context = TranslationContext(location=TranslationContextLocation.other, data=data)
-        return await translator.translate(string, locale=locale, context=context)
+        return translator.translate(string, locale=locale, context=context)
 
 
 class InteractionCallbackActivityInstance:
@@ -1064,6 +1062,128 @@ class InteractionResponse(Generic[ClientT]):
             # If the interaction type isn't an application command then there's no way
             # to obtain this interaction_id again, so just default to None
             entity_id = parent.id if parent.type is InteractionType.application_command else None
+
+            self._parent._state.store_view(view, entity_id)
+
+        self._response_type = InteractionResponseType.channel_message
+
+        if delete_after is not None:
+
+            async def inner_call(delay: float = delete_after):
+                await asyncio.sleep(delay)
+                try:
+                    await self._parent.delete_original_response()
+                except HTTPException:
+                    pass
+
+            asyncio.create_task(inner_call())
+
+    async def send_translated(
+        self,
+        content: Optional[locale_str] = None,
+        *,
+        translation_data: dict[str, str | int] = MISSING,
+        embeds: Sequence[Embed] = MISSING,
+        files: Sequence[File] = MISSING,
+        view: View = MISSING,
+        ephemeral: bool = False,
+        allowed_mentions: AllowedMentions = MISSING,
+        silent: bool = False,
+        delete_after: Optional[float] = None,
+    ) -> None:
+        """|coro|
+
+        Responds to this interaction by sending a message.
+
+        Parameters
+        -----------
+        content: Optional[:class:`~discord.app_commands.locale_str`]
+            The content of the message to send.
+        embeds: List[:class:`Embed`]
+            A list of embeds to send with the content. Maximum of 10. This cannot
+            be mixed with the ``embed`` parameter.
+        files: List[:class:`~discord.File`]
+            A list of files to upload. Must be a maximum of 10.
+        view: :class:`discord.ui.View`
+            The view to send with the message.
+        ephemeral: :class:`bool`
+            Indicates if the message should only be visible to the user who started the interaction.
+            If a view is sent with an ephemeral message and it has no timeout set then the timeout
+            is set to 15 minutes.
+        allowed_mentions: :class:`~discord.AllowedMentions`
+            Controls the mentions being processed in this message. See :meth:`.abc.Messageable.send` for
+            more information.
+        silent: :class:`bool`
+            Whether to suppress push and desktop notifications for the message. This will increment the mention counter
+            in the UI, but will not actually send a notification.
+        delete_after: :class:`float`
+            If provided, the number of seconds to wait in the background
+            before deleting the message we just sent. If the deletion fails,
+            then it is silently ignored.
+        translation_data: Dict[:class:`str`, Any]
+
+        Raises
+        -------
+        HTTPException
+            Sending the message failed.
+        TypeError
+            You specified both ``embed`` and ``embeds`` or ``file`` and ``files``.
+        ValueError
+            The length of ``embeds`` was invalid.
+        InteractionResponded
+            This interaction has already been responded to before.
+        """
+        if self._response_type:
+            raise InteractionResponded(self._parent)
+
+        if ephemeral or silent:
+            flags = MessageFlags._from_value(0)
+            flags.ephemeral = ephemeral
+            flags.suppress_notifications = silent
+        else:
+            flags = MISSING
+
+        translator = self._parent._state._translator
+        if embeds is not MISSING and translator is not None:
+            for embed in embeds:
+                embed._update_locale(self._parent.locale, translator)
+
+        parent = self._parent
+        adapter = async_context.get()
+        params = interaction_message_response_params(
+            type=InteractionResponseType.channel_message.value,
+            content=self._parent.translate(content, data=translation_data)
+            if content is not None
+            else None,
+            embeds=embeds,
+            files=files,
+            previous_allowed_mentions=parent._state.allowed_mentions,
+            allowed_mentions=allowed_mentions,
+            flags=flags,
+            view=view,
+        )
+
+        http = parent._state.http
+        await adapter.create_interaction_response(
+            parent.id,
+            parent.token,
+            session=parent._session,
+            proxy=http.proxy,
+            proxy_auth=http.proxy_auth,
+            params=params,
+        )
+
+        if view is not MISSING and not view.is_finished():
+            if ephemeral and view.timeout is None:
+                view.timeout = 15 * 60.0
+
+            # If the interaction type isn't an application command then there's no way
+            # to obtain this interaction_id again, so just default to None
+            entity_id = (
+                parent.id
+                if parent.type is InteractionType.application_command
+                else None
+            )
             self._parent._state.store_view(view, entity_id)
 
         self._response_type = InteractionResponseType.channel_message
@@ -1388,7 +1508,7 @@ class InteractionResponse(Generic[ClientT]):
 
 
 class _InteractionMessageState:
-    __slots__ = ('_parent', '_interaction')
+    __slots__ = ("_parent", "_interaction")
 
     def __init__(self, interaction: Interaction, parent: ConnectionState):
         self._interaction: Interaction = interaction
