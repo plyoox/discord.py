@@ -1107,7 +1107,7 @@ class CommandTree(Generic[ClientT]):
 
         translator = self.translator
         if translator:
-            payload = [await command.get_translated_payload(self, translator) for command in commands]
+            payload = [command.get_translated_payload(self, translator) for command in commands]
         else:
             payload = [command.to_dict(self) for command in commands]
 
