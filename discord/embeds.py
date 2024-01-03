@@ -765,35 +765,3 @@ class Embed:
             result['title'] = self.title
 
         return result  # type: ignore # This payload is equivalent to the EmbedData type
-
-    def _update_locale(self, locale: Locale, translator: Translator) -> None:
-        """Updates all :class:`~discord.app_commands.translator.locale_str` strings with the
-        locale of the interaction.
-
-        Parameters
-        ----------
-        locale: :class:`~enums.Locale`
-            The locale to update the embed to.
-        translator: :class:`~discord.app_commands.translator.Translator`
-            The translator to use to translate the embed.
-        """
-        context = TranslationContext(location=TranslationContextLocation.other, data=None)
-
-        if isinstance(self.title, locale_str):
-            self.title = translator.translate(self.title, locale=locale, context=context)
-
-        if isinstance(self.description, locale_str):
-            self.description = translator.translate(self.description, locale=locale, context=context)
-
-        if isinstance(self.footer.text, locale_str):
-            self.footer.text = translator.translate(self.footer.text, locale=locale, context=context)
-
-        if isinstance(self.author.name, locale_str):
-            self.author.name = translator.translate(self.author.name, locale=locale, context=context)
-
-        for field in self.fields:
-            if isinstance(field.name, locale_str):
-                field.name = translator.translate(field.name, locale=locale, context=context)
-
-            if isinstance(field.value, locale_str):
-                field.value = translator.translate(field.value, locale=locale, context=context)
