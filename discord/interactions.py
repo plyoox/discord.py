@@ -1143,11 +1143,6 @@ class InteractionResponse(Generic[ClientT]):
         else:
             flags = MISSING
 
-        translator = self._parent._state._translator
-        if embeds is not MISSING and translator is not None:
-            for embed in embeds:
-                embed._update_locale(self._parent.locale, translator)
-
         parent = self._parent
         adapter = async_context.get()
         params = interaction_message_response_params(
