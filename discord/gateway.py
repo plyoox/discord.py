@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-
 from __future__ import annotations
 
 import asyncio
@@ -290,6 +289,8 @@ class DiscordWebSocket:
         The authentication token for discord.
     """
 
+    SHOULD_COMPRESS = True
+
     if TYPE_CHECKING:
         token: Optional[str]
         _connection: ConnectionState
@@ -362,7 +363,7 @@ class DiscordWebSocket:
         sequence: Optional[int] = None,
         resume: bool = False,
         encoding: str = 'json',
-        compress: bool = True,
+        compress: bool = SHOULD_COMPRESS,
     ) -> Self:
         """Creates a main websocket for Discord from a :class:`Client`.
 
@@ -457,7 +458,7 @@ class DiscordWebSocket:
                     'browser': 'discord.py',
                     'device': 'discord.py',
                 },
-                'compress': True,
+                'compress': self.SHOULD_COMPRESS,
                 'large_threshold': 250,
             },
         }
