@@ -188,6 +188,7 @@ class Shard:
                 shard_id=self.id,
                 session=self.ws.session_id,
                 sequence=self.ws.sequence,
+                compress=self.ws._compress,
             )
             self.ws = await asyncio.wait_for(coro, timeout=60.0)
         except self._handled_exceptions as e:
@@ -434,7 +435,7 @@ class AutoShardedClient(Client):
 
         if self.shard_count is None:
             self.shard_count: int
-            self.shard_count, gateway_url = await self.http.get_bot_gateway()
+            self.shard_count, gateway_url = await self.http.get_bot_gateway(compress=self._compress)
             gateway = yarl.URL(gateway_url)
         else:
             gateway = DiscordWebSocket.DEFAULT_GATEWAY
