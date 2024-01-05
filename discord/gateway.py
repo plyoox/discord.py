@@ -328,7 +328,7 @@ class DiscordWebSocket:
     GUILD_SYNC                  = 12
     # fmt: on
 
-    def __init__(self, socket: aiohttp.ClientWebSocketResponse, *, loop: asyncio.AbstractEventLoop) -> None:
+    def __init__(self, socket: aiohttp.ClientWebSocketResponse, *, loop: asyncio.AbstractEventLoop, compress: bool = True) -> None:
         self.socket: aiohttp.ClientWebSocketResponse = socket
         self.loop: asyncio.AbstractEventLoop = loop
 
@@ -346,6 +346,7 @@ class DiscordWebSocket:
         self._decompressor: utils._DecompressionContext = utils._ActiveDecompressionContext()
         self._close_code: Optional[int] = None
         self._rate_limiter: GatewayRatelimiter = GatewayRatelimiter()
+        self._compress: bool = compress
 
     @property
     def open(self) -> bool:
@@ -372,7 +373,6 @@ class DiscordWebSocket:
         sequence: Optional[int] = None,
         resume: bool = False,
         encoding: str = 'json',
-        compress: bool = SHOULD_COMPRESS,
     ) -> Self:
         """Creates a main websocket for Discord from a :class:`Client`.
 
@@ -383,8 +383,8 @@ class DiscordWebSocket:
 
         gateway = gateway or cls.DEFAULT_GATEWAY
 
-        if not compress:
-            url = gateway.with_query(v=INTERNAL_API_VERSION, encoding=encoding)
+        if client._compress:
+            url = gateway.with_query(v=INTERNAL_API_VERSION, encoding=encoding, compress='zlib-stream')
         else:
             url = gateway.with_query(
                 v=INTERNAL_API_VERSION, encoding=encoding, compress=utils._ActiveDecompressionContext.COMPRESSION_TYPE
@@ -407,6 +407,7 @@ class DiscordWebSocket:
         ws.session_id = session
         ws.sequence = sequence
         ws._max_heartbeat_timeout = client._connection.heartbeat_timeout
+        ws._compress = client._compress
 
         if client._enable_debug_events:
             ws.send = ws.debug_send
@@ -467,7 +468,7 @@ class DiscordWebSocket:
                     'browser': 'discord.py',
                     'device': 'discord.py',
                 },
-                'compress': self.SHOULD_COMPRESS,
+                'compress': self._compress,
                 'large_threshold': 250,
             },
         }
