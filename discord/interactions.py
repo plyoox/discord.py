@@ -1430,7 +1430,7 @@ class InteractionResponse(Generic[ClientT]):
         if translator is not None:
             user_locale = self._parent.locale
             payload: Dict[str, Any] = {
-                'choices': [await option.get_translated_payload_for_locale(translator, user_locale) for option in choices],
+                'choices': [option.get_translated_payload_for_locale(translator, user_locale) for option in choices],
             }
         else:
             payload: Dict[str, Any] = {
