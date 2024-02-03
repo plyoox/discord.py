@@ -424,7 +424,7 @@ class GuildSticker(Sticker):
     def __repr__(self) -> str:
         return f'<GuildSticker name={self.name!r} id={self.id} guild_id={self.guild_id} user={self.user!r}>'
 
-    @cached_slot_property('_cs_guild')
+    @property
     def guild(self) -> Optional[Guild]:
         """Optional[:class:`Guild`]: The guild that this sticker is from.
         Could be ``None`` if the bot is not in the guild.
