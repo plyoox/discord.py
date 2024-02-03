@@ -1082,7 +1082,7 @@ class InteractionResponse(Generic[ClientT]):
         self,
         content: Optional[locale_str] = None,
         *,
-        translation_data: dict[str, str | int] = MISSING,
+        translation_data: dict[str, Any] = MISSING,
         embeds: Sequence[Embed] = MISSING,
         files: Sequence[File] = MISSING,
         view: View = MISSING,
