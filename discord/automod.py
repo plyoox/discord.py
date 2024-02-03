@@ -422,7 +422,7 @@ class AutoModRule:
         """Optional[:class:`Member`]: The member that created this rule."""
         return self.guild.get_member(self.creator_id)
 
-    @cached_slot_property('_cs_exempt_roles')
+    @property
     def exempt_roles(self) -> List[Role]:
         """List[:class:`Role`]: The roles that are exempt from this rule."""
         result = []
@@ -434,13 +434,13 @@ class AutoModRule:
 
         return utils._unique(result)
 
-    @cached_slot_property('_cs_exempt_channels')
+    @property
     def exempt_channels(self) -> List[Union[GuildChannel, Thread]]:
         """List[Union[:class:`abc.GuildChannel`, :class:`Thread`]]: The channels that are exempt from this rule."""
         it = filter(None, map(self.guild._resolve_channel, self.exempt_channel_ids))
         return utils._unique(it)
 
-    @cached_slot_property('_cs_actions')
+    @property
     def actions(self) -> List[AutoModRuleAction]:
         """List[:class:`AutoModRuleAction`]: The actions that are taken when this rule is triggered."""
         return [AutoModRuleAction.from_data(action) for action in self._actions]
