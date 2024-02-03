@@ -26,7 +26,6 @@ from __future__ import annotations
 
 import asyncio
 import datetime
-import functools
 import re
 import io
 from os import PathLike
@@ -2528,7 +2527,7 @@ class Message(PartialMessage, Hashable):
         self.guild = new_guild
         self.channel = new_channel  # type: ignore # Not all "GuildChannel" are messageable at the moment
 
-    @functools.cached_property
+    @property
     def raw_mentions(self) -> List[int]:
         """List[:class:`int`]: A property that returns an array of user IDs matched with
         the syntax of ``<@user_id>`` in the message content.
@@ -2538,28 +2537,28 @@ class Message(PartialMessage, Hashable):
         """
         return [int(x) for x in re.findall(r'<@!?([0-9]{15,20})>', self.content)]
 
-    @functools.cached_property
+    @property
     def raw_channel_mentions(self) -> List[int]:
         """List[:class:`int`]: A property that returns an array of channel IDs matched with
         the syntax of ``<#channel_id>`` in the message content.
         """
         return [int(x) for x in re.findall(r'<#([0-9]{15,20})>', self.content)]
 
-    @functools.cached_property
+    @property
     def raw_role_mentions(self) -> List[int]:
         """List[:class:`int`]: A property that returns an array of role IDs matched with
         the syntax of ``<@&role_id>`` in the message content.
         """
         return [int(x) for x in re.findall(r'<@&([0-9]{15,20})>', self.content)]
 
-    @functools.cached_property
+    @property
     def channel_mentions(self) -> List[Union[GuildChannel, Thread]]:
         if self.guild is None:
             return []
         it = filter(None, map(self.guild._resolve_channel, self.raw_channel_mentions))
         return utils._unique(it)
 
-    @functools.cached_property
+    @property
     def clean_content(self) -> str:
         """:class:`str`: A property that returns the content in a "cleaned up"
         manner. This basically means that mentions are transformed
@@ -2684,7 +2683,7 @@ class Message(PartialMessage, Hashable):
             MessageType.poll_result,
         )
 
-    @functools.cached_property
+    @property
     def system_content(self) -> str:
         r""":class:`str`: A property that returns the content that is rendered
         regardless of the :attr:`Message.type`.

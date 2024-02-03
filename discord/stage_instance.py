@@ -112,13 +112,13 @@ class StageInstance(Hashable):
     def __repr__(self) -> str:
         return f'<StageInstance id={self.id} guild={self.guild!r} channel_id={self.channel_id} topic={self.topic!r}>'
 
-    @cached_slot_property('_cs_channel')
+    @property
     def channel(self) -> Optional[StageChannel]:
         """Optional[:class:`StageChannel`]: The channel that stage instance is running in."""
         # the returned channel will always be a StageChannel or None
         return self._state.get_channel(self.channel_id)  # type: ignore
 
-    @cached_slot_property('_cs_scheduled_event')
+    @property
     def scheduled_event(self) -> Optional[ScheduledEvent]:
         """Optional[:class:`ScheduledEvent`]: The scheduled event that belongs to the stage instance."""
         # Guild.get_scheduled_event() expects an int, we are passing Optional[int]
