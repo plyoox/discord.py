@@ -26,6 +26,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
+import functools
 import logging
 from typing import Any, Dict, Optional, Generic, TYPE_CHECKING, Sequence, Tuple, Union, List, overload
 import asyncio
@@ -324,7 +325,7 @@ class Interaction(Generic[ClientT]):
         """:class:`Permissions`: The resolved permissions of the application or the bot, including overwrites."""
         return Permissions(self._app_permissions)
 
-    @utils.cached_slot_property('_cs_namespace')
+    @functools.cached_property
     def namespace(self) -> Namespace:
         """:class:`app_commands.Namespace`: The resolved namespace for this interaction.
 
@@ -348,7 +349,7 @@ class Interaction(Generic[ClientT]):
 
         return Namespace(self, data.get('resolved', {}), options)
 
-    @utils.cached_slot_property('_cs_command')
+    @functools.cached_property
     def command(self) -> Optional[Union[Command[Any, ..., Any], ContextMenu]]:
         """Optional[Union[:class:`app_commands.Command`, :class:`app_commands.ContextMenu`]]: The command being called from
         this interaction.
@@ -376,7 +377,8 @@ class Interaction(Generic[ClientT]):
         else:
             return tree._get_context_menu(data)
 
-    @utils.cached_slot_property('_cs_response')
+    # @functools.cached_property
+    @functools.cached_property
     def response(self) -> InteractionResponse[ClientT]:
         """:class:`InteractionResponse`: Returns an object responsible for handling responding to the interaction.
 
@@ -385,7 +387,7 @@ class Interaction(Generic[ClientT]):
         """
         return InteractionResponse(self)
 
-    @utils.cached_slot_property('_cs_followup')
+    @functools.cached_property
     def followup(self) -> Webhook:
         """:class:`Webhook`: Returns the follow up webhook for follow up interactions."""
         payload: WebhookPayload = {

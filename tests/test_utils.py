@@ -7,6 +7,7 @@ Tests for discord.utils
 """
 
 import datetime
+import functools
 import random
 import collections
 import secrets
@@ -40,7 +41,7 @@ def test_cached_properties():
     class TestSlotted:
         __slots__ = '_cs_time'
 
-        @utils.cached_slot_property('_cs_time')
+        @functools.cached_property
         def time(self) -> float:
             return time.perf_counter()
 
