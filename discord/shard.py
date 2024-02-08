@@ -494,12 +494,13 @@ class AutoShardedClient(Client):
         if self.is_closed():
             return
 
+        gateway = DiscordWebSocket.DEFAULT_GATEWAY
         if self.shard_count is None:
             self.shard_count: int
             self.shard_count, gateway_url, _session_start_limit = await self.http.get_bot_gateway(compress=self._compress)
-            gateway = yarl.URL(gateway_url)
-        else:
-            gateway = DiscordWebSocket.DEFAULT_GATEWAY
+
+            if self._compress:
+                gateway = yarl.URL(gateway_url)
 
         self._connection.shard_count = self.shard_count
 
