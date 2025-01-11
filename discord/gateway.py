@@ -248,8 +248,6 @@ class DiscordWebSocket:
         The authentication token for discord.
     """
 
-    SHOULD_COMPRESS = True
-
     if TYPE_CHECKING:
         token: Optional[str]
         _connection: ConnectionState
@@ -328,11 +326,9 @@ class DiscordWebSocket:
         gateway = gateway or cls.DEFAULT_GATEWAY
 
         if client._compress:
-            url = gateway.with_query(v=INTERNAL_API_VERSION, encoding=encoding, compress='zlib-stream')
+            url = gateway.with_query(v=INTERNAL_API_VERSION, encoding=encoding, compress=utils._ActiveDecompressionContext.COMPRESSION_TYPE)
         else:
-            url = gateway.with_query(
-                v=INTERNAL_API_VERSION, encoding=encoding, compress=utils._ActiveDecompressionContext.COMPRESSION_TYPE
-            )
+            url = gateway.with_query(v=INTERNAL_API_VERSION, encoding=encoding)
 
         socket = await client.http.ws_connect(str(url))
         ws = cls(socket, loop=client.loop)

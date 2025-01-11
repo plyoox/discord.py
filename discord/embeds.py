@@ -27,19 +27,9 @@ from __future__ import annotations
 import datetime
 from typing import Any, Dict, List, Mapping, Optional, Protocol, TYPE_CHECKING, TypeVar, Union
 
-from discord.app_commands.translator import (
-    TranslationContext,
-    TranslationContextLocation,
-    locale_str,
-)
-
 from . import utils
 from .colour import Colour
 from .flags import AttachmentFlags, EmbedFlags
-
-if TYPE_CHECKING:
-    from enums import Locale
-    from app_commands.translator import Translator
 
 # fmt: off
 __all__ = (
