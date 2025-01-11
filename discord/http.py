@@ -2753,7 +2753,7 @@ class HTTPClient:
 
     # Misc
 
-    async def get_bot_gateway(self, *, encoding: str = 'json', compress: bool) -> Tuple[int, str]:
+    async def get_bot_gateway(self) -> Tuple[int, str]:
         try:
             data = await self.request(Route('GET', '/gateway/bot'))
         except HTTPException as exc:
