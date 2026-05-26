@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -326,7 +327,7 @@ class DiscordWebSocket:
     GUILD_SYNC                  = 12
     # fmt: on
 
-    def __init__(self, socket: aiohttp.ClientWebSocketResponse, *, loop: asyncio.AbstractEventLoop, compress: bool = True) -> None:
+    def __init__(self, socket: aiohttp.ClientWebSocketResponse, *, loop: asyncio.AbstractEventLoop) -> None:
         self.socket: aiohttp.ClientWebSocketResponse = socket
         self.loop: asyncio.AbstractEventLoop = loop
 
@@ -344,7 +345,6 @@ class DiscordWebSocket:
         self._decompressor: utils._DecompressionContext = utils._ActiveDecompressionContext()
         self._close_code: Optional[int] = None
         self._rate_limiter: GatewayRatelimiter = GatewayRatelimiter()
-        self._compress: bool = compress
 
     @property
     def open(self) -> bool:
@@ -371,6 +371,7 @@ class DiscordWebSocket:
         sequence: Optional[int] = None,
         resume: bool = False,
         encoding: str = 'json',
+        compress: bool = True,
     ) -> Self:
         """Creates a main websocket for Discord from a :class:`Client`.
 
@@ -381,10 +382,12 @@ class DiscordWebSocket:
 
         gateway = gateway or cls.DEFAULT_GATEWAY
 
-        if client._compress:
-            url = gateway.with_query(v=INTERNAL_API_VERSION, encoding=encoding, compress=utils._ActiveDecompressionContext.COMPRESSION_TYPE)
-        else:
+        if not compress:
             url = gateway.with_query(v=INTERNAL_API_VERSION, encoding=encoding)
+        else:
+            url = gateway.with_query(
+                v=INTERNAL_API_VERSION, encoding=encoding, compress=utils._ActiveDecompressionContext.COMPRESSION_TYPE
+            )
 
         socket = await client.http.ws_connect(str(url))
         ws = cls(socket, loop=client.loop)
@@ -403,7 +406,6 @@ class DiscordWebSocket:
         ws.session_id = session
         ws.sequence = sequence
         ws._max_heartbeat_timeout = client._connection.heartbeat_timeout
-        ws._compress = client._compress
 
         if client._enable_debug_events:
             ws.send = ws.debug_send
@@ -464,7 +466,7 @@ class DiscordWebSocket:
                     'browser': 'discord.py',
                     'device': 'discord.py',
                 },
-                'compress': self._compress,
+                'compress': True,
                 'large_threshold': 250,
             },
         }

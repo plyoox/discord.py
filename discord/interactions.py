@@ -1561,7 +1561,7 @@ class InteractionResponse(Generic[ClientT]):
 
 
 class _InteractionMessageState:
-    __slots__ = ("_parent", "_interaction")
+    __slots__ = ('_parent', '_interaction')
 
     def __init__(self, interaction: Interaction, parent: ConnectionState):
         self._interaction: Interaction = interaction
