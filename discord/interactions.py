@@ -1121,16 +1121,23 @@ class InteractionResponse(Generic[ClientT]):
         *,
         translation_data: dict[str, Any] = MISSING,
         embeds: Sequence[Embed] = MISSING,
+        file: File = MISSING,
         files: Sequence[File] = MISSING,
-        view: View = MISSING,
+        view: BaseView = MISSING,
+        tts: bool = False,
         ephemeral: bool = False,
         allowed_mentions: AllowedMentions = MISSING,
+        suppress_embeds: bool = False,
         silent: bool = False,
         delete_after: Optional[float] = None,
-    ) -> None:
+        poll: Poll = MISSING,
+    ) -> InteractionCallbackResponse[ClientT]:
         """|coro|
 
         Responds to this interaction by sending a message.
+
+        .. versionchanged:: 2.5
+            This now returns a :class:`InteractionCallbackResponse` instance.
 
         Parameters
         -----------
@@ -1139,9 +1146,16 @@ class InteractionResponse(Generic[ClientT]):
         embeds: List[:class:`Embed`]
             A list of embeds to send with the content. Maximum of 10. This cannot
             be mixed with the ``embed`` parameter.
+        embed: :class:`Embed`
+            The rich embed for the content to send. This cannot be mixed with
+            ``embeds`` parameter.
+        file: :class:`~discord.File`
+            The file to upload.
         files: List[:class:`~discord.File`]
             A list of files to upload. Must be a maximum of 10.
-        view: :class:`discord.ui.View`
+        tts: :class:`bool`
+            Indicates if the message should be sent using text-to-speech.
+        view: Union[:class:`discord.ui.View`, :class:`discord.ui.LayoutView`]
             The view to send with the message.
         ephemeral: :class:`bool`
             Indicates if the message should only be visible to the user who started the interaction.
@@ -1150,14 +1164,23 @@ class InteractionResponse(Generic[ClientT]):
         allowed_mentions: :class:`~discord.AllowedMentions`
             Controls the mentions being processed in this message. See :meth:`.abc.Messageable.send` for
             more information.
+        suppress_embeds: :class:`bool`
+            Whether to suppress embeds for the message. This sends the message without any embeds if set to ``True``.
         silent: :class:`bool`
             Whether to suppress push and desktop notifications for the message. This will increment the mention counter
             in the UI, but will not actually send a notification.
+
+            .. versionadded:: 2.2
         delete_after: :class:`float`
             If provided, the number of seconds to wait in the background
             before deleting the message we just sent. If the deletion fails,
             then it is silently ignored.
-        translation_data: Dict[:class:`str`, Any]
+
+            .. versionadded:: 2.1
+        poll: :class:`~discord.Poll`
+            The poll to send with this message.
+
+            .. versionadded:: 2.4
 
         Raises
         -------
@@ -1169,13 +1192,19 @@ class InteractionResponse(Generic[ClientT]):
             The length of ``embeds`` was invalid.
         InteractionResponded
             This interaction has already been responded to before.
+
+        Returns
+        -------
+        :class:`InteractionCallbackResponse`
+            The interaction callback data.
         """
         if self._response_type:
             raise InteractionResponded(self._parent)
 
-        if ephemeral or silent:
+        if ephemeral or suppress_embeds or silent:
             flags = MessageFlags._from_value(0)
             flags.ephemeral = ephemeral
+            flags.suppress_embeds = suppress_embeds
             flags.suppress_notifications = silent
         else:
             flags = MISSING
@@ -1187,22 +1216,32 @@ class InteractionResponse(Generic[ClientT]):
             content=self._parent.translate(content, data=translation_data)
             if content is not None
             else None,
+            tts=tts,
             embeds=embeds,
+            file=file,
             files=files,
             previous_allowed_mentions=parent._state.allowed_mentions,
             allowed_mentions=allowed_mentions,
             flags=flags,
             view=view,
+            poll=poll,
         )
 
         http = parent._state.http
-        await adapter.create_interaction_response(
+        data = await adapter.create_interaction_response(
             parent.id,
             parent.token,
             session=parent._session,
             proxy=http.proxy,
             proxy_auth=http.proxy_auth,
             params=params,
+        )
+        self._response_type = InteractionResponseType.channel_message
+        response = InteractionCallbackResponse(
+            data=data,
+            parent=self._parent,
+            state=self._parent._state,
+            type=self._response_type,
         )
 
         if view is not MISSING and not view.is_finished():
@@ -1222,12 +1261,7 @@ class InteractionResponse(Generic[ClientT]):
 
             asyncio.create_task(inner_call())
 
-        return InteractionCallbackResponse(
-            data=response,
-            parent=self._parent,
-            state=self._parent._state,
-            type=self._response_type,
-        )
+        return response
 
     async def edit_message(
         self,
